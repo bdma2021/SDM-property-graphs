@@ -2,7 +2,6 @@ import logging
 import sys
 
 from neo4j import GraphDatabase
-from neo4j.exceptions import ServiceUnavailable
 
 class App:
 
@@ -233,9 +232,6 @@ class App:
             session.write_transaction(self._load_journal_has_volume)
         
         with self.driver.session() as session:
-            session.write_transaction(self._load_paper_published_in_year)
-        
-        with self.driver.session() as session:
             session.write_transaction(self._load_paper_published_in_edition)
         
         with self.driver.session() as session:
@@ -349,16 +345,6 @@ class App:
             )
         tx.run(query)
         print("Edge (joural)-[HAS]->(volume) loaded")
-
-    @staticmethod
-    def _load_paper_published_in_year(tx):
-        query = (
-            "LOAD CSV WITH HEADERS FROM 'file:///paper_published_in_year.csv' AS row "
-            "MATCH (p:Paper {id: row.paperid}), (y:Year {year: row.year})"
-            "CREATE (p)-[:Published_in]->(y);"
-            )
-        tx.run(query)
-        print("Edge (paper)-[PUBLISHED_IN]->(year) loaded")
 
     @staticmethod
     def _load_paper_published_in_edition(tx):
