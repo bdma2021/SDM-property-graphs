@@ -237,6 +237,10 @@ class App:
         with self.driver.session() as session:
             session.write_transaction(self._load_author_published_in_edition)
 
+        with self.driver.session() as session:
+            session.write_transaction(self._load_paper_published_in_year)
+            
+
     @staticmethod
     def _load_author_wrote_paper(tx):
         query = (
@@ -352,6 +356,16 @@ class App:
             "LOAD CSV WITH HEADERS FROM 'file:///published_in_edition.csv' AS row "
             "MATCH (p:Paper {id: row.paperid}), (e:Edition {id: row.editionid})"
             "CREATE (p)-[:Published_in]->(e);"
+            )
+        tx.run(query)
+        print("Edge (paper)-[PUBLISHED_IN]->(year) loaded")
+
+    @staticmethod
+    def _load_paper_published_in_year(tx):
+        query = (
+            "LOAD CSV WITH HEADERS FROM 'file:///paper_published_in_year.csv' AS row "
+            "MATCH (p:Paper {id: row.paperid}), (y:Year {year: row.year})"
+            "CREATE (p)-[:Published_in]->(y);"
             )
         tx.run(query)
         print("Edge (paper)-[PUBLISHED_IN]->(year) loaded")
