@@ -32,26 +32,12 @@ class App:
     def load_nodes(self):
         with self.driver.session() as session:
             session.write_transaction(self._load_authors)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_editions)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_journals)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_keywords)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_papers)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_conferences)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_volumes)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_years)
 
     @staticmethod
@@ -94,7 +80,7 @@ class App:
     def _load_papers(tx):
         query = (
             "LOAD CSV WITH HEADERS FROM 'file:///papers.csv' AS row "
-            "CREATE (:Paper {id: row._id, title: row.title, language: row.language, issn: row.issn, isbn: row.isbn, url: row.url, abstract: row.abstract});"
+            "CREATE (:Paper {id: row._id, title: row.title, language: row.lang, isbn: row.isbn, abstract: row.abstract});"
             )
         tx.run(query)
         print("Papers loaded")
@@ -129,26 +115,12 @@ class App:
     def create_indexes(self):
         with self.driver.session() as session:
             session.write_transaction(self._create_index_authorid)
-        
-        with self.driver.session() as session:
             session.write_transaction(self._create_index_editionid)
-
-        with self.driver.session() as session:
             session.write_transaction(self._create_index_journalid)
-
-        with self.driver.session() as session:
             session.write_transaction(self._create_index_keywordid)
-
-        with self.driver.session() as session:
             session.write_transaction(self._create_index_paperid)
-
-        with self.driver.session() as session:
             session.write_transaction(self._create_index_conferenceid)
-
-        with self.driver.session() as session:
             session.write_transaction(self._create_index_volumeid)
-
-        with self.driver.session() as session:
             session.write_transaction(self._create_index_year)
 
     @staticmethod
@@ -203,38 +175,16 @@ class App:
     def load_edges(self):
         with self.driver.session() as session:
             session.write_transaction(self._load_author_wrote_paper)
-        
-        with self.driver.session() as session:
             session.write_transaction(self._load_author_reviewed_paper)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_author_corresponding_paper)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_paper_has_keywords)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_paper_cites_paper)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_conference_has_edition)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_edition_happened_in_year)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_volume_published_in_year)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_volume_contains_paper)
-
-        with self.driver.session() as session:
             session.write_transaction(self._load_journal_has_volume)
-        
-        with self.driver.session() as session:
             session.write_transaction(self._load_paper_published_in_edition)
-        
-        with self.driver.session() as session:
             session.write_transaction(self._load_author_published_in_edition)
             
 
@@ -364,8 +314,8 @@ if __name__ == "__main__":
     password = "sdm123"
     App.enable_log(logging.INFO, sys.stdout)
     app = App(bolt_url, user, password)
-    #app.clean_db()
-    #app.load_nodes()
-    #app.create_indexes()
+    app.clean_db()
+    app.load_nodes()
+    app.create_indexes()
     app.load_edges()
     app.close()
