@@ -236,9 +236,6 @@ class App:
         
         with self.driver.session() as session:
             session.write_transaction(self._load_author_published_in_edition)
-
-        with self.driver.session() as session:
-            session.write_transaction(self._load_paper_published_in_year)
             
 
     @staticmethod
@@ -360,25 +357,15 @@ class App:
         tx.run(query)
         print("Edge (paper)-[PUBLISHED_IN]->(year) loaded")
 
-    @staticmethod
-    def _load_paper_published_in_year(tx):
-        query = (
-            "LOAD CSV WITH HEADERS FROM 'file:///paper_published_in_year.csv' AS row "
-            "MATCH (p:Paper {id: row.paperid}), (y:Year {year: row.year})"
-            "CREATE (p)-[:Published_in]->(y);"
-            )
-        tx.run(query)
-        print("Edge (paper)-[PUBLISHED_IN]->(year) loaded")
-   
 
 if __name__ == "__main__":
-    bolt_url = "bolt://localhost:11005"
+    bolt_url = "bolt://localhost:7687"
     user = "neo4j"
     password = "sdm123"
     App.enable_log(logging.INFO, sys.stdout)
     app = App(bolt_url, user, password)
-    app.clean_db()
-    app.load_nodes()
-    app.create_indexes()
+    #app.clean_db()
+    #app.load_nodes()
+    #app.create_indexes()
     app.load_edges()
     app.close()
