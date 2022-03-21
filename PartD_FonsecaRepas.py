@@ -72,6 +72,49 @@ class App:
             "CREATE (journal)-[:Relates]->(community); "
             )
         tx.run(query)
+
+    @staticmethod
+    def _create_database_community_graph(tx):
+        query = (
+            "CALL gds.graph.create.cypher("
+                "\"database_community\", "
+                "\"MATCH (n:Paper)-[r]-()<--()-[:Relates]->(:Community { name: \\\"database\\\"}) WHERE r:Contains OR r:Published_in RETURN DISTINCT id(n) AS id\", "
+                "\"MATCH (n)-[r:Cites]->(p) RETURN id(n) AS source, id(p) AS target\", "
+                "{ validateRelationships: false }"
+            ");"
+            )
+        tx.run(query)
+
+    @staticmethod
+    def _highlight_top100(tx):
+        query = (
+            "CALL gds.pageRank.stream(\"database_community\")"
+            "YIELD nodeId, score"
+            "WITH gds.util.asNode(nodeId) AS paper"
+            "ORDER BY score DESC"
+            "LIMIT 100"
+            "SET paper :Top100DatabaseCommunity"
+            "RETURN paper;"
+            )
+        tx.run(query)
+
+    @staticmethod
+    def _get_reviewers(tx):
+        query = (
+            "MATCH (potential_reviewer:Author)-[:Wrote]->(n:Top100DatabaseCommunity)"
+            "RETURN DISTINCT potential_reviewer;"
+            )
+        tx.run(query)
+
+    @staticmethod
+    def _get_reviewers(tx):
+        query = (
+            "MATCH (guru:Author)-[:Wrote]->(p1:Top100DatabaseCommunity)"
+            "MATCH (guru:Author)-[:Wrote]->(p2:Top100DatabaseCommunity)"
+            "WHERE p1 <> p2"
+            "RETURN DISTINCT guru;"
+            )
+        tx.run(query)
         
 
 if __name__ == "__main__":
