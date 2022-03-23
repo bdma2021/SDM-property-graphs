@@ -19,11 +19,27 @@ class App:
         logging.getLogger("neo4j").addHandler(handler)
         logging.getLogger("neo4j").setLevel(level)
 
-
-    def create_database_community(self):
+    def setup_recommender(self):
         with self.driver.session() as session:
             session.write_transaction(self._create_database_community)
             session.write_transaction(self._connect_community_keywords)
+            session.write_transaction(self._relate_conferences_to_community)
+            session.write_transaction(self._relate_journals_to_community)
+            session.write_transaction(self._highlight_top100)
+
+    def recommend_reviewers(self):
+        with self.driver.session() as session:
+            result = session.write_transaction(self._get_reviewers)
+            print("\n Showing first 10 rows of the result \n")
+            for row in result[:10]:
+                print(row)
+
+    def recommend_gurus(self):
+        with self.driver.session() as session:
+            result = session.write_transaction(self._get_gurus)
+            print("\n Showing first 10 rows of the result \n")
+            for row in result[:10]:
+                print(row)
             
     @staticmethod
     def _create_database_community(tx):
@@ -39,11 +55,6 @@ class App:
             "CREATE (community)-[:Contains]->(keyword); "
             )
         tx.run(query)
-
-    def relate_journals_conferences_to_community(self):
-        with self.driver.session() as session:
-            session.write_transaction(self._relate_conferences_to_community)
-            session.write_transaction(self._relate_journals_to_community)
 
     @staticmethod
     def _relate_conferences_to_community(tx):
@@ -104,17 +115,20 @@ class App:
             "MATCH (potential_reviewer:Author)-[:Wrote]->(n:Top100DatabaseCommunity)"
             "RETURN DISTINCT potential_reviewer;"
             )
-        tx.run(query)
+        result = tx.run(query)
+        return result
 
     @staticmethod
-    def _get_reviewers(tx):
+    def _get_gurus(tx):
         query = (
             "MATCH (guru:Author)-[:Wrote]->(p1:Top100DatabaseCommunity)"
             "MATCH (guru:Author)-[:Wrote]->(p2:Top100DatabaseCommunity)"
             "WHERE p1 <> p2"
             "RETURN DISTINCT guru;"
             )
-        tx.run(query)
+        result = tx.run(query)
+        return result
+        
         
 
 if __name__ == "__main__":
@@ -123,6 +137,7 @@ if __name__ == "__main__":
     password = "sdm123"
     App.enable_log(logging.INFO, sys.stdout)
     app = App(bolt_url, user, password)
-    app.create_database_community()
-    app.relate_journals_conferences_to_community()
+    app.setup_recommender()
+    app.recommend_reviewers()
+    app.recommend_gurus()
     app.close()
