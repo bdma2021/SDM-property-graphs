@@ -22,7 +22,7 @@ class App:
     
     def paper_similarity(self):
         with self.driver.session() as session:
-            #session.write_transaction(self._create_bipartite_graph)
+            session.write_transaction(self._create_bipartite_graph)
             result = session.write_transaction(self._compute_similarity)
             print("\n Showing first 10 rows of the result \n")
             for row in result[:10]:
